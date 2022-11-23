@@ -1,8 +1,13 @@
 <script>
     import axios from "axios";
+    import { querystring } from "svelte-spa-router";
 
-    // TODO: Setze hier die URL zu deinem mit Postman erstellten Mock Server
     const api_root = "http://localhost:8080";
+
+    let earningsMin, earningsMax;
+
+    let currentPage;
+    let nrOfPages = 0;
 
     let jobs = [];
     let job = {
@@ -11,23 +16,46 @@
         jobType: null,
     };
 
+    $: {
+        let searchParams = new URLSearchParams($querystring);
+
+        if (searchParams.has("page")) {
+            currentPage = searchParams.get("page");
+        } else {
+            currentPage = "1";
+        }
+
+        getJobs();
+    }
+
     function getJobs() {
+        let query = "pageSize=4&page=" + currentPage;
+
+        if (earningsMin) {
+            query += "&min=" + earningsMin;
+        }
+
+        if (earningsMax) {
+            query += "&max=" + earningsMax;
+        }
+
         var config = {
             method: "get",
-            url: api_root + "/api/job",
+            url: api_root + "/api/job?" + query,
             headers: {},
         };
 
         axios(config)
             .then(function (response) {
                 jobs = response.data.content;
+
+                nrOfPages = response.data.totalPages;
             })
             .catch(function (error) {
                 alert("Could not get jobs");
                 console.log(error);
             });
     }
-    getJobs();
 
     function createJob() {
         var config = {
@@ -50,7 +78,6 @@
             });
     }
 </script>
-
 
 <h1 class="mt-3">Create Job</h1>
 <form class="mb-5">
@@ -94,6 +121,30 @@
 </form>
 
 <h1>All Jobs</h1>
+<div class="row my-3">
+    <div class="col-auto">
+        <label for="" class="col-form-label">Earnings: </label>
+    </div>
+    <div class="col-3">
+        <input
+            class="form-control"
+            type="number"
+            placeholder="from"
+            bind:value={earningsMin}
+        />
+    </div>
+    <div class="col-3">
+        <input
+            class="form-control"
+            type="number"
+            placeholder="to"
+            bind:value={earningsMax}
+        />
+    </div>
+    <div class="col-3">
+        <button class="btn btn-secondary" on:click={getJobs}>Apply</button>
+    </div>
+</div>
 <table class="table">
     <thead>
         <tr>
@@ -118,3 +169,17 @@
         {/each}
     </tbody>
 </table>
+<nav>
+    <ul class="pagination">
+        {#each Array(nrOfPages) as _, i}
+            <li class="page-item">
+                <a
+                    class="page-link"
+                    class:active={currentPage == i + 1}
+                    href={"#/jobs?page=" + (i + 1)}
+                    >{i + 1}
+                </a>
+            </li>
+        {/each}
+    </ul>
+</nav>

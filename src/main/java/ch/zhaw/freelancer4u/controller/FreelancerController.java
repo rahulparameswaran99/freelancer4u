@@ -1,9 +1,10 @@
 package ch.zhaw.freelancer4u.controller;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ch.zhaw.freelancer4u.model.Freelancer;
@@ -33,9 +35,17 @@ public class FreelancerController {
     }
 
     @GetMapping("")
-    public ResponseEntity<List<Freelancer>> getAllFreelancer() {
-        List<Freelancer> allFree = freelancerRepository.findAll();
-        return new ResponseEntity<>(allFree, HttpStatus.OK);
+    public ResponseEntity<Page<Freelancer>> getAllFreelancer(
+        @RequestParam(required = false) Integer page,
+        @RequestParam(required = false) Integer pageSize) {
+        if (page == null) {
+            page = 1;
+            }
+        if (pageSize == null) {
+            pageSize = 4;
+            }
+            Page<Freelancer> allFreelancers = freelancerRepository.findAll(PageRequest.of(page-1, pageSize));
+            return new ResponseEntity<>(allFreelancers, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

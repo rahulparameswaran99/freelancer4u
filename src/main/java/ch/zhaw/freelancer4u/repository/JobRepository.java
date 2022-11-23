@@ -2,6 +2,8 @@ package ch.zhaw.freelancer4u.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
@@ -12,6 +14,10 @@ import ch.zhaw.freelancer4u.model.JobStateAggregationDTO;
 public interface JobRepository extends MongoRepository<Job,String>{
     List<Job> findByEarningsGreaterThan(Double earnings);
     List<Job> findByEarningsBetween(Double min, Double max);
+
+    Page<Job> findByEarningsGreaterThan(Double earnings, Pageable pageable);
+    Page<Job> findByEarningsBetween(Double min, Double max, Pageable pageable);
+
 
     @Aggregation("{$group: {_id: '$jobState',jobIds: {$push: '$_id'},count: {$count: {}}}}")
     List<JobStateAggregationDTO> getJobStateAggregation();
