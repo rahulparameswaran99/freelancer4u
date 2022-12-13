@@ -1,10 +1,12 @@
 package ch.zhaw.freelancer4u.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ch.zhaw.freelancer4u.model.Freelancer;
 import ch.zhaw.freelancer4u.model.Job;
 import ch.zhaw.freelancer4u.model.JobState;
 import ch.zhaw.freelancer4u.repository.FreelancerRepository;
@@ -47,4 +49,12 @@ public class JobService {
         }
         return Optional.empty();
     }
+
+    public Optional<Job> assignJobByEmail(String jobId, String email) {
+        List<Freelancer> fList = freelancerRepository.findByEmail(email);
+        if (fList.size() == 1) {
+        return assignJob(jobId, fList.get(0).getId());
+        }
+        return Optional.empty();
+       } 
 }

@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +22,7 @@ import ch.zhaw.freelancer4u.model.Job;
 import ch.zhaw.freelancer4u.model.JobCreateDTO;
 import ch.zhaw.freelancer4u.model.JobStateAggregationDTO;
 import ch.zhaw.freelancer4u.repository.JobRepository;
+import ch.zhaw.freelancer4u.security.UserValidator;
 
 @RestController
 @RequestMapping("/api/job")
@@ -29,7 +32,11 @@ public class JobController {
     JobRepository jobRepository;
 
     @PostMapping("")
-    public ResponseEntity<Job> createJob(@RequestBody JobCreateDTO cDTO) {
+    public ResponseEntity<Job> createJob(@RequestBody JobCreateDTO cDTO, @AuthenticationPrincipal Jwt jwt) {
+                
+         if (!UserValidator.userHasRole(jwt, "admin")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
         Job jDAO = new Job(cDTO.getDescription(), cDTO.getJobType(), cDTO.getEarnings());
         Job j = jobRepository.save(jDAO);
         return new ResponseEntity<>(j, HttpStatus.CREATED);

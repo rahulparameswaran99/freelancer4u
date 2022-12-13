@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.zhaw.freelancer4u.model.Freelancer;
 import ch.zhaw.freelancer4u.model.FreelancerCreateDTO;
 import ch.zhaw.freelancer4u.repository.FreelancerRepository;
+import ch.zhaw.freelancer4u.security.UserValidator;
 
 @RestController
 @RequestMapping("/api/freelancer")
@@ -28,7 +31,12 @@ public class FreelancerController {
 
     @PostMapping("")
     public ResponseEntity<Freelancer> createFreelancer(
-        @RequestBody FreelancerCreateDTO fDTO) {
+        @RequestBody FreelancerCreateDTO fDTO, @AuthenticationPrincipal Jwt jwt) {
+
+            if (!UserValidator.userHasRole(jwt, "admin")) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+
         Freelancer fDAO = new Freelancer(fDTO.getEmail(), fDTO.getName());
         Freelancer f = freelancerRepository.save(fDAO);
         return new ResponseEntity<>(f, HttpStatus.CREATED);

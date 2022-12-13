@@ -1,5 +1,7 @@
 package ch.zhaw.freelancer4u.security;
 
+import java.util.List;
+
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
@@ -8,7 +10,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import ch.zhaw.freelancer4u.model.Freelancer;
 import ch.zhaw.freelancer4u.repository.FreelancerRepository;
 
-class UserValidator implements OAuth2TokenValidator<Jwt> {
+public class UserValidator implements OAuth2TokenValidator<Jwt> {
 
     FreelancerRepository freelancerRepository;
 
@@ -29,4 +31,14 @@ class UserValidator implements OAuth2TokenValidator<Jwt> {
         }
         return OAuth2TokenValidatorResult.failure(error);
     }
+
+    public static boolean userHasRole(Jwt jwt, String requiredRole) {
+        if (jwt != null) {
+        List<String> userRole = jwt.getClaimAsStringList("user_roles");
+        return userRole.stream()
+        .filter(x -> x.equals(requiredRole)).count() == 1;
+        }
+        return false;
+       } 
+       
 }

@@ -3,8 +3,12 @@
 </script>
 
 <h1 class="mt-3">Account Details</h1><br>
-<img src={$user.picture} alt="test" /> <br>
+<p><img src={$user.picture} alt="test" /></p>
 
-<label class="form-label" for="Name">Name: {$user.name}</label><br>
-<label class="form-label" for="Nickname">Nickname: {$user.nickname}</label><br>
-<label class="form-label" for="Email">E-Mail: {$user.email}</label>
+<p><b>Name: </b>{$user.name}</p>
+<p><b>Nickname: </b>{$user.nickname}</p>
+<p><b>E-Mail: </b> {$user.email}</p>
+
+{#if $user.user_roles && $user.user_roles.length > 0}
+ <p><b>Roles:</b> {$user.user_roles}</p>
+ {/if} 

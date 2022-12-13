@@ -1,9 +1,10 @@
 <script>
     import axios from "axios";
     import { querystring } from "svelte-spa-router";
-    import { jwt_token} from "../store";
+    import { jwt_token } from "../store";
+    import { isAuthenticated, user } from "../store";
 
-    const api_root = "http://localhost:8080";
+    const api_root = window.location.origin;
 
     let earningsMin, earningsMax;
 
@@ -43,7 +44,7 @@
         var config = {
             method: "get",
             url: api_root + "/api/job?" + query,
-            headers: {Authorization: "Bearer "+$jwt_token},
+            headers: { Authorization: "Bearer " + $jwt_token },
         };
 
         axios(config)
@@ -62,7 +63,8 @@
         var config = {
             method: "post",
             url: api_root + "/api/job",
-            headers: {Authorization: "Bearer "+$jwt_token,
+            headers: {
+                Authorization: "Bearer " + $jwt_token,
                 "Content-Type": "application/json",
             },
             data: job,
@@ -78,48 +80,68 @@
                 console.log(error);
             });
     }
+
+    function assignToMe(jobId) {
+        var config = {
+            method: "post",
+            url: api_root + "/api/service/assigntome?jobId=" + jobId,
+            headers: { Authorization: "Bearer " + $jwt_token },
+        };
+        axios(config)
+            .then(function (response) {
+                getJobs();
+            })
+            .catch(function (error) {
+                alert("Could not assign job to me");
+                console.log(error);
+            });
+    }
 </script>
 
-<h1 class="mt-3">Create Job</h1>
-<form class="mb-5">
-    <div class="row mb-3">
-        <div class="col">
-            <label class="form-label" for="description">Description</label>
-            <input
-                bind:value={job.description}
-                class="form-control"
-                id="description"
-                type="text"
-            />
+{#if $isAuthenticated && $user.user_roles && $user.user_roles.includes("admin")}
+    <h1 class="mt-3">Create Job</h1>
+    <form class="mb-5">
+        <div class="row mb-3">
+            <div class="col">
+                <label class="form-label" for="description">Description</label>
+                <input
+                    bind:value={job.description}
+                    class="form-control"
+                    id="description"
+                    type="text"
+                />
+            </div>
         </div>
-    </div>
-    <div class="row mb-3">
-        <div class="col">
-            <label class="form-label" for="type">Type</label>
-            <select
-                bind:value={job.jobType}
-                class="form-select"
-                id="type"
-                type="text"
-            >
-                <option value="OTHER">OTHER</option>
-                <option value="TEST">TEST</option>
-                <option value="IMPLEMENT">IMPLEMENT</option>
-                <option value="REVIEW">REVIEW</option>
-            </select>
+        <div class="row mb-3">
+            <div class="col">
+                <label class="form-label" for="type">Type</label>
+                <select
+                    bind:value={job.jobType}
+                    class="form-select"
+                    id="type"
+                    type="text"
+                >
+                    <option value="OTHER">OTHER</option>
+                    <option value="TEST">TEST</option>
+                    <option value="IMPLEMENT">IMPLEMENT</option>
+                    <option value="REVIEW">REVIEW</option>
+                </select>
+            </div>
+            <div class="col">
+                <label class="form-label" for="earnings">Earnings</label>
+                <input
+                    bind:value={job.earnings}
+                    class="form-control"
+                    id="earnings"
+                    type="number"
+                />
+            </div>
         </div>
-        <div class="col">
-            <label class="form-label" for="earnings">Earnings</label>
-            <input
-                bind:value={job.earnings}
-                class="form-control"
-                id="earnings"
-                type="number"
-            />
-        </div>
-    </div>
-    <button type="button" class="btn btn-primary" on:click={createJob}>Submit</button>
-</form>
+        <button type="button" class="btn btn-primary" on:click={createJob}
+            >Submit</button
+        >
+    </form>
+{/if}
 
 <h1>All Jobs</h1>
 <div class="row my-3">
@@ -155,6 +177,7 @@
             <th scope="col">State</th>
             <th scope="col">FreelancerId</th>
             <th scope="col">Comment</th>
+            <th scope="col">Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -166,6 +189,21 @@
                 <td>{job.jobState}</td>
                 <td>{job.freelancerId}</td>
                 <td>{job.comment}</td>
+                <td>
+                    {#if job.jobState === "ASSIGNED"}
+                        <span class="badge bg-secondary">Assigned</span>
+                    {:else if job.freelancerId === null}
+                        <button
+                            type="button"
+                            class="btn btn-primary btn-sm"
+                            on:click={() => {
+                                assignToMe(job.id);
+                            }}
+                        >
+                            Assign to me
+                        </button>
+                    {/if}
+                </td>
             </tr>
         {/each}
     </tbody>
